@@ -13,7 +13,7 @@ base.arc(300, 300, 50, 0, Math.PI * 2);
 const hitQueue = [];
 const judgements = [0, 0, 0, 0];
 let combo = 0;
-let startTime;
+let start = false;
 
 function draw() {
   ctx.clearRect(0, 0, 600, 600);
@@ -26,7 +26,7 @@ function draw() {
   ctx.font = "24px Times New Roman";
   ctx.fillText(String(combo).padStart(3, '0'), 285, 62)
 
-  const now = Date.now() - startTime;
+  const now = document.getElementById("audio").currentTime * 1000;
   ctx.fillStyle = "rgb(0 0 255)";
   notes.forEach(note => {
     const t = note[0] * 60 * 1000 / bpm;
@@ -83,8 +83,8 @@ function draw() {
 }
 
 canvas.addEventListener("click", e => {
-  if (!startTime) {
-    startTime = Date.now() - 12000;
+  if (!start) {
+    start = true;
     window.requestAnimationFrame(draw);
     document.getElementById("audio").currentTime = 12;
     document.getElementById("audio").play();
@@ -96,7 +96,7 @@ canvas.addEventListener("click", e => {
   if (angle < 0) angle += Math.PI * 2;
 
   let closestNote = null, closestTime = 200, closestAngle = Math.PI / 3;
-  const now = Date.now() - startTime;
+  const now = document.getElementById("audio").currentTime * 1000;
   notes.forEach(note => {
     if (note[3]) return;
     const dt = Math.abs(now - note[0] * 60 * 1000 / bpm);
