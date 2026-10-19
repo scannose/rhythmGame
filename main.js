@@ -1,14 +1,17 @@
 import { terabyte } from './chart.js';
 
-const notes = terabyte.map(note => note.concat(note.length == 3 ? [false] : [1, false]));
+const notes = terabyte.chart.map(note => note.concat(note.length == 3 ? [false] : [1, false]));
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const scrollSpeed = 0.5;
-const bpm = 230;
+const bpm = terabyte.bpm;
+const offset = terabyte.offset;
 
 const base = new Path2D();
 base.arc(300, 300, 50, 0, Math.PI * 2);
+
+let mouseX, mouseY;
 
 const hitQueue = [];
 const judgements = [0, 0, 0, 0];
@@ -29,13 +32,12 @@ function draw() {
   const now = document.getElementById("audio").currentTime * 1000;
   ctx.fillStyle = "rgb(0 0 255)";
   notes.forEach(note => {
-    const t = note[0] * 60 * 1000 / bpm;
+    const t = note[0] * 60 * 1000 / bpm + offset;
     if (now - t >= 200 && !note[3]) {
       notes[notes.indexOf(note)][3] = true;
       judgements[3]++;
       combo = 0;
-    }
-    if (now - t <= 50 && !note[3]) {
+    } else if (now - t <= 50 && !note[3]) {
       const dist = scrollSpeed * note[2] * (now - t) - 50;
       const circle = new Path2D();
       circle.arc(
@@ -62,7 +64,25 @@ function draw() {
     ctx.fill();
   }
 
-  if (now >= 37500) {
+  if (now >= 2000 && now <= 6000) {
+    ctx.font = "16px Times New Roman";
+    ctx.fillStyle = `rgb(0 0 0 / ${Math.min(100, 400 - Math.abs(now - 4000) / 5)}%)`;
+    ctx.fillText("Hit each note when its center match the border of the green circle", 100, 183);
+  }
+
+  if (now >= 7000 && now <= 11000) {
+    ctx.font = "16px Times New Roman";
+    ctx.fillStyle = `rgb(0 0 0 / ${Math.min(100, 400 - Math.abs(now - 9000) / 5)}%)`;
+    ctx.fillText("Use your mouse to aim in the direction the notes are coming in", 110, 183);
+  }
+
+  if (now >= 12000 && now <= 16000) {
+    ctx.font = "16px Times New Roman";
+    ctx.fillStyle = `rgb(0 0 0 / ${Math.min(100, 400 - Math.abs(now - 14000) / 5)}%)`;
+    ctx.fillText("You may use your mouse or your keyboard to hit notes", 130, 183);
+  }
+
+  if (now >= terabyte.end) {
     ctx.font = "20px Times New Roman";
     ctx.fillStyle = "rgb(255 255 0)";
     ctx.fillText(`Perfect: ${judgements[0]}`, 260, 130);
@@ -82,26 +102,25 @@ function draw() {
   window.requestAnimationFrame(draw);
 }
 
-canvas.addEventListener("click", e => {
+const tap = e => {
   if (!start) {
     start = true;
-    window.requestAnimationFrame(draw);
-    document.getElementById("audio").currentTime = 12;
     document.getElementById("audio").play();
+    window.requestAnimationFrame(draw);
     return;
   }
 
-  let angle = Math.atan(-(e.offsetX - 300) / (e.offsetY - 300 || 1e-9));
-  if (e.offsetY >= 300) angle += Math.PI;
+  let angle = Math.atan(-(mouseX - 300) / (mouseY - 300 || 1e-9));
+  if (mouseY >= 300) angle += Math.PI;
   if (angle < 0) angle += Math.PI * 2;
 
   let closestNote = null, closestTime = 200, closestAngle = Math.PI / 3;
   const now = document.getElementById("audio").currentTime * 1000;
   notes.forEach(note => {
     if (note[3]) return;
-    const dt = Math.abs(now - note[0] * 60 * 1000 / bpm);
+    const dt = Math.abs(now - note[0] * 60 * 1000 / bpm - offset);
     const da = Math.min(Math.abs(angle - note[1] * Math.PI / 180), Math.PI * 2 - Math.abs(angle - note[1] * Math.PI / 180));
-    if ((dt < closestTime || dt == closestTime && da < closestAngle) && da <= Math.PI / 3) {
+    if ((dt < closestTime || dt == closestTime && da < closestAngle) && da <= Math.PI / 4) {
       closestNote = note;
       closestTime = dt;
       closestAngle = da;
@@ -121,6 +140,17 @@ canvas.addEventListener("click", e => {
     } else judgements[3]++;
     combo = closestTime <= 160 ? combo + 1 : 0;
   }
+};
+
+canvas.addEventListener("mousemove", e => {
+  mouseX = e.offsetX;
+  mouseY = e.offsetY;
+});
+
+canvas.addEventListener("mousedown", tap);
+
+window.addEventListener("keydown", e => {
+  canvas.dispatchEvent(new MouseEvent("mousedown"));
 });
 
 ctx.fillStyle = "rgb(0 255 0)";
