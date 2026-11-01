@@ -5,8 +5,17 @@
   </head>
   <body>
     <canvas id="canvas" height="600" width="600"></canvas>
-    <audio id="audio" preload="auto">
+    <p>Level Selection</p>
+    <select id="songSelect">
+      <option value="terabyteEasy">terabyte connection EZ</option>
+      <option value="terabyteHard">terabyte connection HD</option>
+      <option value="calamityHard">calamity fortune HD</option>
+    </select>
+    <audio id="audio_terabyte" preload="auto">
       <source src="terabyte.mp3" type="audio/mp3">
+    </audio>
+    <audio id="audio_calamityFortune" preload="auto">
+      <source src="calamityfortune.wav" type="audio/wav">
     </audio>
     <script src="main.js" type="module"></script>
   </body>
